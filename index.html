@@ -14,8 +14,8 @@
     async function connectAndCallAPI() {
       if (typeof window.ethereum !== 'undefined') {
         // Step 1: Connect Wallet
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
+        const provider = new ethers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
         const walletAddress = await signer.getAddress();
 
         // Step 2: Sign Message
