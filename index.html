@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viction Retrodrop Amount</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.0/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.0.0/dist/ethers.umd.min.js"></script>
 </head>
 <body>
   <h1>Viction Retrodrop Amount</h1>
@@ -12,35 +12,45 @@
 
   <script>
     async function connectAndCallAPI() {
-      if (typeof window.ethereum !== 'undefined') {
-        // Step 1: Connect Wallet
-        const provider = new ethers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const walletAddress = await signer.getAddress();
+      let provider;
+      let signer = null;
 
-        // Step 2: Sign Message
-        const message = "Viction Retrodrop";
-        const signature = await signer.signMessage(message);
-
-        // Step 3: Call API with the signature in the header
-        const response = await fetch('https://gov-api.viction.xyz/retrodrop/amount', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'onchainSignature': signature,
-          }
-        });
-
-        const data = await response.json();
-
-        // Step 4: Display Result in Raw Form
-        if (data.success) {
-          document.getElementById('result').textContent = `Amount: ${data.data.amount}`;
-        } else {
-          document.getElementById('result').textContent = `Error: ${data.message}`;
-        }
+      if (typeof window.ethereum === 'undefined') {
+        // If MetaMask is not installed, use the default provider (read-only access)
+        console.log("MetaMask not installed; using read-only defaults");
+        provider = ethers.getDefaultProvider();
       } else {
-        alert("Please install MetaMask!");
+        // Connect to MetaMask using the Web3Provider
+        provider = new ethers.Web3Provider(window.ethereum);
+
+        // Request account access if not already granted
+        await provider.send('eth_requestAccounts', []);
+        signer = provider.getSigner();
+      }
+
+      // Step 1: Get the wallet address
+      const walletAddress = await signer.getAddress();
+
+      // Step 2: Sign the message
+      const message = "Viction Retrodrop";
+      const signature = await signer.signMessage(message);
+
+      // Step 3: Call the API with the signature in the header
+      const response = await fetch('https://gov-api.viction.xyz/retrodrop/amount', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'onchainSignature': signature,
+        }
+      });
+
+      const data = await response.json();
+
+      // Step 4: Display the result in raw form
+      if (data.success) {
+        document.getElementById('result').textContent = `Amount: ${data.data.amount}`;
+      } else {
+        document.getElementById('result').textContent = `Error: ${data.message}`;
       }
     }
 
